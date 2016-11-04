@@ -1,0 +1,29 @@
+---
+- name: Make exploit users
+  user: name={{ item.key }}d createhome=no
+  with_dict: "{{ exploits }}"
+
+- name: Create exploit serve directorys
+  file: path=/srv/{{ item.key }} owner={{ item.key }}d group={{ item.key }}d mode=0750 state=directory
+  with_dict: "{{ exploits }}"
+
+- name: Deploy exploits
+  unarchive: src=assets/exploits/{{ item.key }}.tgz dest=/srv/{{ item.key }} owner={{ item.key }}d group={{ item.key }}d mode="u=rwX,g=rX,o="
+  with_dict: "{{ exploits }}"
+  
+- name: Install exploit iptables rules
+  template: src=exploit.rules dest=/etc/iptables.d/{{ item.key }}.rules owner=root group=root mode=0640
+  with_dict: "{{ exploits }}"
+  notify: iptables
+
+- name: Create exploit runit directory
+  file: path=/etc/sv/{{ item.key }}d state=directory owner=root group=root mode=0755
+  with_dict: "{{ exploits }}"
+  
+- name: Install exploit runit configuration
+  template: src=run dest=/etc/sv/{{ item.key }}d owner=root group=root mode=0755
+  with_dict: "{{ exploits }}"
+
+- name: Enable exploits on startup
+  file: src=/etc/sv/{{ item.key }}d dest=/var/service/{{ item.key }}d state=link
+  with_dict: "{{ exploits }}"

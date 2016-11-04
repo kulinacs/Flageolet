@@ -1,0 +1,4 @@
+#!/bin/sh
+
+cd /srv/{{ item.key }}
+exec chpst -u {{ item.key }}d:{{ item.key }}d {{ item.value.run_command }}
